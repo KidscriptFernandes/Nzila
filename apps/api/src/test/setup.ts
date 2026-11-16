@@ -1,0 +1,9 @@
+process.env.NODE_ENV = "test";
+process.env.LOG_LEVEL = "silent";
+process.env.DATABASE_URL ??= "postgresql://postgres:postgres@127.0.0.1:5432/nzila_test";
+process.env.SUPABASE_URL ??= "https://test.supabase.co";
+process.env.SUPABASE_SERVICE_ROLE_KEY ??= "test-service-role-key-000000000000";
+process.env.SUPABASE_JWT_SECRET ??= "test-jwt-secret-000000000000000000";
+process.env.CORS_ORIGINS ??= "";
+process.env.WHATSAPP_VERIFY_TOKEN ??= "test-whatsapp-verify-token";
+process.env.WHATSAPP_APP_SECRET ??= "test-whatsapp-app-secret";
