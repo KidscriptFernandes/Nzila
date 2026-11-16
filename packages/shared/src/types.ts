@@ -40,6 +40,12 @@ export interface ProfileDTO {
   driver?: DriverProfileDTO | null;
 }
 
+export interface MeResponse {
+  profile: ProfileDTO;
+  client: ClientProfileDTO | null;
+  driver: DriverProfileDTO | null;
+}
+
 export interface ClientProfileDTO {
   nationality: string | null;
   arrivalDate: string | null;
@@ -100,7 +106,7 @@ export interface RideDTO {
   driverId: string | null;
   vehicleId: string | null;
   customerName: string;
-  customerPhone: string;
+  customerPhone?: string;
   origin: string;
   originLat: string | null;
   originLng: string | null;
@@ -161,6 +167,32 @@ export interface SupportRequestDTO {
   resolvedAt: ISODateString | null;
   riderName?: string;
   riderPhone?: string;
+  rideReference?: string | null;
+}
+
+export interface AdminDriverDTO {
+  id: string;
+  fullName: string;
+  whatsapp: string;
+  code: string;
+  verification: DriverVerificationStatus;
+  verifiedAt: ISODateString | null;
+  zones: string[];
+  ratingAvg: string;
+  ratingCount: number;
+  available: boolean;
+  vehicles: VehicleDTO[];
+  createdAt: ISODateString;
+}
+
+export interface AdminRideQueueDTO {
+  items: RideDTO[];
+  counts: Record<string, number>;
+  today: number;
+}
+
+export interface AdminSupportDTO {
+  items: SupportRequestDTO[];
 }
 
 export interface DriverInviteDTO {

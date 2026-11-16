@@ -192,6 +192,26 @@ export const adminSupportQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(100),
 });
 
+export const adminDriversQuerySchema = z.object({
+  verification: driverVerificationSchema.optional(),
+  q: z.string().trim().max(120).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+});
+
+export const updateRideRouteSchema = z
+  .object({
+    origin: z.string().trim().min(3).max(200).optional(),
+    originLat: z.number().min(-90).max(90).nullable().optional(),
+    originLng: z.number().min(-180).max(180).nullable().optional(),
+    destination: z.string().trim().min(3).max(200).optional(),
+    destinationLat: z.number().min(-90).max(90).nullable().optional(),
+    destinationLng: z.number().min(-180).max(180).nullable().optional(),
+  })
+  .refine(
+    (data) => data.origin !== undefined || data.destination !== undefined,
+    "Indica pelo menos a origem ou o destino",
+  );
+
 export const updateSupportSchema = z.object({
   status: z.enum(["EM_ATENDIMENTO", "RESOLVIDO"]),
   note: z.string().trim().max(1000).optional(),
