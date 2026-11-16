@@ -29,10 +29,10 @@ const sql = postgres(url, { max: 1, prepare: false, onnotice: () => undefined })
 
 try {
   if (mode === "rls" || mode === "supabase") {
-    const [{ present }] = await sql<{ present: boolean }[]>`
+    const rows = await sql<{ present: boolean }[]>`
       select to_regclass('auth.users') is not null as present
     `;
-    if (!present) {
+    if (!rows[0]?.present) {
       console.warn(`[${mode}] schema auth ausente — script ignorado (não é um projeto Supabase).`);
       process.exit(0);
     }
