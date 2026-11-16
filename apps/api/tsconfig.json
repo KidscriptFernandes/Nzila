@@ -1,0 +1,10 @@
+{
+  "extends": "@nzila/config/tsconfig.node.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "drizzle.config.ts", "tsup.config.ts", "vitest.config.ts"]
+}
