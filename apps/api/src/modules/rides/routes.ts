@@ -1,9 +1,11 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { cancelRideSchema, createRideSchema, ridesQuerySchema } from "@nzila/shared";
+import { Errors } from "../../lib/errors";
 import { tryNotify } from "../../lib/notifications";
 import {
   createRide,
+  fetchRideRow,
   getRideDetail,
   listRidesForActor,
   transitionRide,
@@ -173,6 +175,41 @@ export const ridesRoutes: FastifyPluginAsyncZod = async (app) => {
         note: req.body.reason ?? "Motorista recusou",
       });
       return getRideDetail(app.db, req.params.id, actor);
+    },
+  );
+
+  app.post(
+    "/:id/arrived",
+    {
+      preHandler: app.requireRole("driver"),
+      config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+      schema: {
+        params: idParams,
+        tags: ["rides"],
+        summary: "Motorista avisa que chegou ao ponto de recolha",
+        security: [{ bearer: [] }],
+      },
+    },
+    async (req) => {
+      const actor = req.user!;
+      const ride = await fetchRideRow(app.db, req.params.id);
+
+      if (ride.driverId !== actor.id) throw Errors.forbidden();
+      if (ride.status !== "MOTORISTA_CONFIRMADO" && ride.status !== "CLIENTE_CONFIRMADO") {
+        throw Errors.businessRule(
+          "INVALID_RIDE_STATE",
+          "Só podes marcar chegada depois de aceitar a corrida",
+        );
+      }
+
+      await tryNotify(app.db, app.log, ride.clientId, {
+        title: "O motorista chegou",
+        body: `O motorista da corrida ${ride.reference} está no ponto de recolha.`,
+        rideId: ride.id,
+        data: { type: "driver_arrived" },
+      });
+
+      return { arrived: true };
     },
   );
 
