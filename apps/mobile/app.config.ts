@@ -47,6 +47,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-secure-store",
+    [
+      "expo-image-picker",
+      {
+        photosPermission:
+          "A Nzila usa as tuas fotos apenas para anexar imagens à conversa do local.",
+      },
+    ],
     "expo-localization",
     ["expo-notifications", { color: "#CC092F" }],
     [

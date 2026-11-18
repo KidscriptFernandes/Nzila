@@ -56,6 +56,8 @@ export const placeCategoryEnum = pgEnum("place_category", [
   "FARMACIA",
   "BANCO",
   "ATM",
+  "PARAGEM",
+  "POSTO",
   "ATRACAO",
   "AEROPORTO",
   "OUTRO",

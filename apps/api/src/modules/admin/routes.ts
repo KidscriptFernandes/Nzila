@@ -8,6 +8,7 @@ import {
   assignDriverSchema,
   cancellationPolicySchema,
   createDriverSchema,
+  createPlaceSchema,
   paymentSchema,
   priceSchema,
   updateRideRouteSchema,
@@ -15,6 +16,7 @@ import {
   verificationUpdateSchema,
 } from "@nzila/shared";
 import { tryNotify } from "../../lib/notifications";
+import { createPlace, listAllPlaces } from "../places/service";
 import { getRideDetail, transitionRide } from "../rides/service";
 import {
   assignDriverToRide,
@@ -339,6 +341,38 @@ export const adminRoutes: FastifyPluginAsyncZod = async (app) => {
         handledBy: result.request.handledBy,
         resolvedAt: result.request.resolvedAt?.toISOString() ?? null,
       };
+    },
+  );
+
+  app.get(
+    "/places",
+    {
+      config: { rateLimit: { max: 120, timeWindow: "1 minute" } },
+      schema: {
+        tags: ["admin"],
+        summary: "Lista todos os pontos, incluindo não publicados",
+        security: [{ bearer: [] }],
+      },
+    },
+    async () => ({ items: await listAllPlaces(app.db) }),
+  );
+
+  app.post(
+    "/places",
+    {
+      preHandler: app.requireRole("admin"),
+      bodyLimit: 4_000_000,
+      config: { rateLimit: { max: 30, timeWindow: "1 minute" } },
+      schema: {
+        body: createPlaceSchema,
+        tags: ["admin"],
+        summary: "Cria um ponto com coordenadas e foto",
+        security: [{ bearer: [] }],
+      },
+    },
+    async (req, reply) => {
+      const place = await createPlace(app.db, req.body, req.user!, req.ip);
+      return reply.code(201).send(place);
     },
   );
 

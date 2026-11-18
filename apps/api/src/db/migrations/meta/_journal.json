@@ -8,6 +8,34 @@
       "when": 1794821246660,
       "tag": "0000_brainy_sandman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794896891179,
+      "tag": "0001_eminent_wendigo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794898328337,
+      "tag": "0002_perfect_pestilence",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794898534898,
+      "tag": "0003_whole_doctor_strange",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795011037456,
+      "tag": "0004_omniscient_moira_mactaggert",
+      "breakpoints": true
     }
   ]
 }

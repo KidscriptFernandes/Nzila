@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { emailSchema, phoneSchema } from "@nzila/shared";
-import { Eye, EyeOff, MailCheck } from "lucide-react-native";
+import { Eye, EyeOff } from "lucide-react-native";
 import { Wordmark } from "@/components/Brand";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -14,9 +15,9 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { FormInput } from "@/components/ui/FormInput";
 import { Screen } from "@/components/ui/Screen";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
-import { supabaseConfigured } from "@/lib/env";
+import { ApiError } from "@/lib/api";
 import { queryClient } from "@/lib/query";
-import { supabase } from "@/lib/supabase";
+import { useSession } from "@/store/session";
 import { useSettings } from "@/store/settings";
 
 const registerFormSchema = z.object({
@@ -38,13 +39,24 @@ const registerFormSchema = z.object({
 
 type RegisterValues = z.infer<typeof registerFormSchema>;
 
+function registerErrorMessage(error: unknown, t: TFunction): string {
+  if (error instanceof ApiError) {
+    if (error.code === "EMAIL_TAKEN") return t("auth.alreadyRegistered");
+    if (error.status === 0) return t("errors.network");
+    if (error.status === 429) return t("errors.rateLimit", { seconds: "60s" });
+    return error.message;
+  }
+  if (error instanceof Error) return error.message;
+  return t("errors.generic");
+}
+
 export default function RegisterScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const registerAccount = useSession((state) => state.register);
   const language = useSettings((state) => state.language);
   const [showPassword, setShowPassword] = useState(false);
   const [rootError, setRootError] = useState<string | null>(null);
-  const [sentEmail, setSentEmail] = useState<string | null>(null);
 
   const {
     control,
@@ -70,68 +82,24 @@ export default function RegisterScreen() {
 
   const onSubmit = async (values: RegisterValues) => {
     setRootError(null);
-    if (!supabaseConfigured) {
-      setRootError(t("auth.notConfigured"));
-      return;
-    }
-
-    const metadata: Record<string, string | boolean> = {
-      full_name: values.fullName.trim(),
-      whatsapp: values.whatsapp.trim(),
-      locale: language,
-      consent: true,
-    };
-    if (values.nationality?.trim()) metadata.nationality = values.nationality.trim();
-    if (values.arrivalDate?.trim()) metadata.arrival_date = values.arrivalDate.trim();
-    if (values.hotel?.trim()) metadata.hotel = values.hotel.trim();
-
-    const { data, error } = await supabase.auth.signUp({
-      email: values.email,
-      password: values.password,
-      options: { data: metadata },
-    });
-
-    if (error) {
-      const message = error.message.toLowerCase();
-      setRootError(
-        message.includes("already registered")
-          ? t("auth.alreadyRegistered")
-          : error.message,
-      );
-      return;
-    }
-
-    if (data.session) {
+    try {
+      await registerAccount({
+        fullName: values.fullName.trim(),
+        email: values.email,
+        password: values.password,
+        whatsapp: values.whatsapp.trim(),
+        locale: language,
+        nationality: values.nationality?.trim() || undefined,
+        arrivalDate: values.arrivalDate?.trim() || undefined,
+        hotel: values.hotel?.trim() || undefined,
+        consent: true,
+      });
       queryClient.clear();
       router.replace("/");
-      return;
+    } catch (error) {
+      setRootError(registerErrorMessage(error, t));
     }
-
-    setSentEmail(values.email);
   };
-
-  if (sentEmail) {
-    return (
-      <Screen className="justify-center px-6">
-        <Card className="items-center py-8">
-          <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-nzila-baobab-soft dark:bg-nzila-baobab/20">
-            <MailCheck size={28} color="#2E7D4F" />
-          </View>
-          <Text className="text-center font-heading text-xl text-ink dark:text-nzila-sand">
-            {t("auth.checkEmail")}
-          </Text>
-          <Text className="mt-2 text-center font-body text-sm text-ink-soft dark:text-night-muted">
-            {sentEmail}
-          </Text>
-          <Button
-            label={t("auth.signIn")}
-            className="mt-6"
-            onPress={() => router.replace("/(auth)/login")}
-          />
-        </Card>
-      </Screen>
-    );
-  }
 
   return (
     <Screen scroll keyboard contentContainerClassName="px-6 pb-10">

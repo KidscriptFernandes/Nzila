@@ -23,6 +23,9 @@ alter table public.support_requests enable row level security;
 alter table public.push_tokens enable row level security;
 alter table public.notifications enable row level security;
 alter table public.audit_logs enable row level security;
+alter table public.place_messages enable row level security;
+alter table public.auth_credentials enable row level security;
+alter table public.auth_otp_codes enable row level security;
 
 -- profiles
 drop policy if exists profiles_self_read on public.profiles;
@@ -112,6 +115,16 @@ drop policy if exists support_staff_read on public.support_requests;
 create policy support_staff_read on public.support_requests
 for select to authenticated using (public.nzila_role() in ('assistant', 'admin'));
 
+-- conversa dos locais (leitura por utilizadores autenticados; escrita via API)
+drop policy if exists place_messages_read on public.place_messages;
+create policy place_messages_read on public.place_messages
+for select to authenticated using (
+  exists (
+    select 1 from public.places p
+    where p.id = place_messages.place_id and p.published = true
+  )
+);
+
 -- push tokens
 drop policy if exists push_tokens_self_read on public.push_tokens;
 create policy push_tokens_self_read on public.push_tokens
@@ -133,6 +146,13 @@ begin
       where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'support_requests'
     ) then
       alter publication supabase_realtime add table public.support_requests;
+    end if;
+
+    if not exists (
+      select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'place_messages'
+    ) then
+      alter publication supabase_realtime add table public.place_messages;
     end if;
   end if;
 end;

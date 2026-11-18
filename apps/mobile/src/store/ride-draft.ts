@@ -3,6 +3,7 @@ import { create } from "zustand";
 export interface PickedLocation {
   lat: number;
   lng: number;
+  label?: string;
 }
 
 interface RideDraftState {

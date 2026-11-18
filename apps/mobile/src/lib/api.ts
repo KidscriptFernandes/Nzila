@@ -1,6 +1,6 @@
 import type { ApiErrorBody } from "@nzila/shared";
+import { getStoredAccessToken } from "./auth-session";
 import { env } from "./env";
-import { supabase } from "./supabase";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -24,6 +24,7 @@ export function retryAfterSeconds(error: unknown): number | undefined {
 
 export interface ApiRequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
+  auth?: boolean;
 }
 
 export function buildQuery(params?: Record<string, string | number | boolean | undefined | null>): string {
@@ -37,21 +38,36 @@ export function buildQuery(params?: Record<string, string | number | boolean | u
   return serialized ? `?${serialized}` : "";
 }
 
+export async function getAccessToken(): Promise<string> {
+  return getStoredAccessToken();
+}
+
+export function buildWebSocketUrl(path: string, token: string): string {
+  const base = env.apiUrl.replace(/^http/, "ws").replace(/\/+$/, "");
+  return `${base}${path}?token=${encodeURIComponent(token)}`;
+}
+
+export function mediaUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${env.apiUrl}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
 export async function api<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  const { data } = await supabase.auth.getSession();
-  const headers = new Headers(options.headers);
+  const { body, auth = true, ...requestInit } = options;
+  const headers = new Headers(requestInit.headers);
   headers.set("Accept", "application/json");
-  if (options.body !== undefined) headers.set("Content-Type", "application/json");
-  if (data.session?.access_token) {
-    headers.set("Authorization", `Bearer ${data.session.access_token}`);
+  if (body !== undefined) headers.set("Content-Type", "application/json");
+  const accessToken = auth ? await getAccessToken() : "";
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
   let response: Response;
   try {
     response = await fetch(`${env.apiUrl}${path}`, {
-      ...options,
+      ...requestInit,
       headers,
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   } catch {
     throw new ApiError("Sem ligação à API Nzila.", 0, "NETWORK_ERROR");

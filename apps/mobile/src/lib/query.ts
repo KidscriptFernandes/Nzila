@@ -33,6 +33,9 @@ export const queryKeys = {
   ride: (id: string) => ["ride", id] as const,
   places: (filters?: Record<string, string | number | undefined>) =>
     ["places", filters ?? {}] as const,
+  adminPlaces: ["places", "admin"] as const,
+  place: (id: string) => ["place", id] as const,
+  placeMessages: (placeId: string) => ["place-messages", placeId] as const,
   support: ["support", "mine"] as const,
   driverMe: ["driver", "me"] as const,
   driverDocuments: ["driver", "documents"] as const,

@@ -1,0 +1,14 @@
+node_modules/
+**/node_modules/
+.git/
+.turbo/
+.expo/
+**/dist/
+**/.env
+**/.env.*
+!**/.env.example
+**/coverage/
+*.log
+pnpm-debug.log*
+apps/mobile/*
+!apps/mobile/package.json

@@ -59,6 +59,8 @@ export const PLACE_CATEGORIES = [
   "FARMACIA",
   "BANCO",
   "ATM",
+  "PARAGEM",
+  "POSTO",
   "ATRACAO",
   "AEROPORTO",
   "OUTRO",

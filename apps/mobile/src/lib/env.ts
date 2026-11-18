@@ -6,6 +6,9 @@ export const env = {
   supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "missing-anon-key",
   googleMapsKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY ?? "",
   whatsappNumber: (process.env.EXPO_PUBLIC_WHATSAPP_NUMBER ?? "244923000000").replace(/\D/g, ""),
+  devAuthToken: process.env.EXPO_PUBLIC_DEV_AUTH_TOKEN ?? "",
+  devAuthEmail: process.env.EXPO_PUBLIC_DEV_AUTH_EMAIL ?? "cliente1@nzila.ao",
+  devAuthUserId: process.env.EXPO_PUBLIC_DEV_AUTH_USER_ID ?? "",
 };
 
 export const supabaseConfigured = Boolean(

@@ -1,10 +1,12 @@
 import "dotenv/config";
-import { eq, sql } from "drizzle-orm";
+import { createHash } from "node:crypto";
+import { asc, eq, sql } from "drizzle-orm";
 import type { User } from "@supabase/supabase-js";
 import { db, closeDb } from "./client";
 import {
   clients,
   drivers,
+  placeMessages,
   places,
   profiles,
   ratings,
@@ -16,6 +18,7 @@ import { supabaseAdmin } from "../lib/supabase-admin";
 import { DEFAULT_CANCELLATION_POLICY } from "@nzila/shared";
 
 const DEMO_PASSWORD = "Nzila!Demo2026";
+const LOCAL_SEED = process.env.SEED_LOCAL === "1";
 const TOMORROW = new Date(Date.now() + 24 * 60 * 60 * 1000);
 const YESTERDAY = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
@@ -30,10 +33,20 @@ async function findUserByEmail(email: string): Promise<User | undefined> {
   return data.users.find((user) => user.email?.toLowerCase() === email.toLowerCase());
 }
 
+function localUserId(email: string): string {
+  const hash = createHash("sha1").update(email.toLowerCase()).digest();
+  hash[6] = (hash[6]! & 0x0f) | 0x50;
+  hash[8] = (hash[8]! & 0x3f) | 0x80;
+  const hex = hash.toString("hex");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+}
+
 async function ensureUser(
   email: string,
   metadata: Record<string, string>,
 ): Promise<string> {
+  if (LOCAL_SEED) return localUserId(email);
+
   const existing = await findUserByEmail(email);
   if (existing) return existing.id;
 
@@ -260,6 +273,40 @@ async function seedPlaces(): Promise<void> {
   );
 }
 
+async function seedPlaceMessages(authorIds: string[]): Promise<void> {
+  if (!authorIds.length) return;
+
+  const rows = await db
+    .select({ id: places.id })
+    .from(places)
+    .where(eq(places.published, true))
+    .orderBy(asc(places.name))
+    .limit(6);
+
+  const opinions = [
+    "Cheguei há pouco. O mais fácil é vir de motorista e combinar o ponto de encontro à entrada principal.",
+    "Evita as horas de ponta (07:30–09:00 e 17:00–19:00). O trânsito fica complicado e a viagem demora o dobro.",
+    "Leva kwanzas em dinheiro. Nem todos os multicaixas da zona estão a funcionar.",
+    "Se fores de noite, pede para te deixarem na entrada com iluminação e segue sempre pelas ruas principais.",
+    "A zona é movimentada durante o dia. Mantém os pertences por perto e pergunta ao pessoal do local como seguir.",
+    "Diz ao motorista o nome exato do local, não só a rua. Ajuda muito a chegar sem voltas.",
+  ];
+
+  for (const [index, place] of rows.entries()) {
+    const [existing] = await db
+      .select({ value: sql<number>`count(*)::int` })
+      .from(placeMessages)
+      .where(eq(placeMessages.placeId, place.id));
+    if (Number(existing?.value ?? 0) > 0) continue;
+
+    await db.insert(placeMessages).values({
+      placeId: place.id,
+      authorId: authorIds[index % authorIds.length]!,
+      body: opinions[index % opinions.length]!,
+    });
+  }
+}
+
 async function seedSampleRides(
   clientIds: string[],
   driverRefs: { driverId: string; vehicleId: string }[],
@@ -479,6 +526,13 @@ async function main() {
 
   const driverRefs = await seedDrivers(clientIds);
   await seedPlaces();
+  await seedPlaceMessages([
+    assistantIds[0] ?? adminId,
+    driverRefs[0]?.driverId ?? adminId,
+    clientIds[1] ?? clientIds[0]!,
+    assistantIds[1] ?? adminId,
+    clientIds[0]!,
+  ]);
   await seedSampleRides(clientIds, driverRefs, assistantIds[0] ?? adminId);
 
   await db.execute(sql`

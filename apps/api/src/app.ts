@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import Fastify from "fastify";
+import websocket from "@fastify/websocket";
 import {
   serializerCompiler,
   validatorCompiler,
@@ -15,6 +16,7 @@ import { swaggerPlugin } from "./plugins/swagger";
 import { dbPlugin } from "./plugins/db";
 import { rawBodyPlugin } from "./plugins/raw-body";
 import { meRoutes } from "./modules/auth/routes";
+import { authRoutes } from "./modules/auth/session-routes";
 import { ridesRoutes } from "./modules/rides/routes";
 import { driversRoutes } from "./modules/drivers/routes";
 import { placesRoutes } from "./modules/places/routes";
@@ -58,6 +60,7 @@ export async function buildApp() {
 
   await app.register(errorsPlugin);
   await app.register(securityPlugin);
+  await app.register(websocket);
   await app.register(rawBodyPlugin);
   await app.register(rateLimitPlugin);
   await app.register(swaggerPlugin);
@@ -81,6 +84,7 @@ export async function buildApp() {
 
   await app.register(
     async (v1) => {
+      await v1.register(authRoutes, { prefix: "/auth" });
       await v1.register(meRoutes, { prefix: "/me" });
       await v1.register(ridesRoutes, { prefix: "/rides" });
       await v1.register(driversRoutes, { prefix: "/drivers" });

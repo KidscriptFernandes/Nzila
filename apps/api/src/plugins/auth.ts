@@ -1,10 +1,9 @@
 import fp from "fastify-plugin";
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { createRemoteJWKSet, jwtVerify } from "jose";
 import { eq } from "drizzle-orm";
 import type { Role } from "@nzila/shared";
-import { env } from "../config/env";
 import { profiles } from "../db/schema";
+import { verifyAccessToken } from "../lib/verify-token";
 
 export type AuthUser = { id: string; email?: string; role: Role };
 
@@ -20,14 +19,6 @@ declare module "fastify" {
   }
 }
 
-const issuer = `${env.SUPABASE_URL}/auth/v1`;
-const secret = env.SUPABASE_JWT_SECRET
-  ? new TextEncoder().encode(env.SUPABASE_JWT_SECRET)
-  : undefined;
-const jwks = env.SUPABASE_JWKS_URL
-  ? createRemoteJWKSet(new URL(env.SUPABASE_JWKS_URL))
-  : undefined;
-
 export const authPlugin = fp(async (app) => {
   app.decorateRequest("user", undefined);
 
@@ -38,25 +29,19 @@ export const authPlugin = fp(async (app) => {
     }
 
     try {
-      const { payload } = await jwtVerify(header.slice(7), jwks ?? secret!, {
-        issuer,
-        audience: "authenticated",
-      });
-
-      const id = payload.sub;
-      if (!id) return reply.unauthorized("Token inválido");
+      const token = await verifyAccessToken(header.slice(7));
 
       const [profile] = await app.db
         .select({ role: profiles.role, active: profiles.active })
         .from(profiles)
-        .where(eq(profiles.id, id));
+        .where(eq(profiles.id, token.id));
 
       if (!profile) return reply.forbidden("Conta sem perfil Nzila");
       if (!profile.active) return reply.forbidden("Conta inativa");
 
       req.user = {
-        id,
-        email: typeof payload.email === "string" ? payload.email : undefined,
+        id: token.id,
+        email: token.email,
         role: profile.role,
       };
     } catch {

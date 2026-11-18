@@ -12,12 +12,18 @@ import { useSession } from "@/store/session";
 import { useMe } from "./hooks";
 
 export function roleHome(role: Role): Href {
-  if (role === "driver") return "/(driver)";
-  if (role === "client") return "/(client)";
-  return "/staff-only";
+  if (role === "driver") return "/(driver)/(tabs)";
+  if (role === "client") return "/(client)/(tabs)";
+  return "/(admin)/places";
 }
 
-export function RoleGuard({ role, children }: { role: Role; children: ReactNode }) {
+export function RoleGuard({
+  role,
+  children,
+}: {
+  role: Role | Role[];
+  children: ReactNode;
+}) {
   const { t } = useTranslation();
   const { session, initialized, signOut } = useSession();
   const me = useMe(initialized && Boolean(session));
@@ -44,7 +50,8 @@ export function RoleGuard({ role, children }: { role: Role; children: ReactNode 
     );
   }
 
-  if (me.data.profile.role !== role) {
+  const allowed = Array.isArray(role) ? role : [role];
+  if (!allowed.includes(me.data.profile.role)) {
     return <Redirect href={roleHome(me.data.profile.role)} />;
   }
 

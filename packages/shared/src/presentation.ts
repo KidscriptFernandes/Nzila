@@ -124,6 +124,8 @@ export const PLACE_CATEGORY_META: Record<
   FARMACIA: { label: "Farmácias", color: "#CC092F", icon: "pill" },
   BANCO: { label: "Bancos", color: "#0E6F7C", icon: "landmark" },
   ATM: { label: "ATMs", color: "#0E6F7C", icon: "credit-card" },
+  PARAGEM: { label: "Paragens", color: "#0E6F7C", icon: "bus-front" },
+  POSTO: { label: "Postos", color: "#B8860B", icon: "fuel" },
   ATRACAO: { label: "Atrações", color: "#B8860B", icon: "camera" },
   AEROPORTO: { label: "Aeroporto", color: "#0D0D0D", icon: "plane" },
   OUTRO: { label: "Outros", color: "#4A4A4A", icon: "map-pin" },

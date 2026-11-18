@@ -116,6 +116,20 @@ export const signUpSchema = loginSchema.extend({
   whatsapp: phoneSchema,
 });
 
+export const registerAccountSchema = registerProfileSchema.extend({
+  email: emailSchema,
+  password: z.string().min(8).max(128),
+});
+
+export const otpRequestSchema = z.object({
+  email: emailSchema,
+});
+
+export const otpVerifySchema = z.object({
+  email: emailSchema,
+  code: z.string().trim().regex(/^\d{6}$/, "Código inválido"),
+});
+
 export const assignDriverSchema = z.object({
   driverId: uuidSchema,
   vehicleId: uuidSchema,
@@ -180,6 +194,43 @@ export const placesQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(100),
 });
 
+export const placePhotoSchema = z.object({
+  mime: z.enum(["image/jpeg", "image/png", "image/webp"]),
+  data: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z0-9+/]+={0,2}$/, "Imagem inválida")
+    .max(3_000_000, "Imagem demasiado grande"),
+});
+
+export const createPlaceSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  category: placeCategorySchema,
+  description: z.string().trim().max(1000).nullish(),
+  address: z.string().trim().max(200).nullish(),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+  phone: z.string().trim().max(30).nullish(),
+  googleMapsUrl: z.string().trim().url().max(500).nullish(),
+  published: z.boolean().default(true),
+  photo: placePhotoSchema.optional(),
+});
+
+export const placeMessageSchema = z
+  .object({
+    body: z.string().trim().max(500).default(""),
+    photo: placePhotoSchema.optional(),
+  })
+  .refine((data) => data.body.length > 0 || Boolean(data.photo), {
+    message: "Escreve uma mensagem ou anexa uma foto",
+    path: ["body"],
+  });
+
+export const placeMessagesQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  before: z.coerce.date().optional(),
+});
+
 export const adminRidesQuerySchema = z.object({
   status: rideStatusSchema.optional(),
   priority: ridePrioritySchema.optional(),
@@ -219,9 +270,15 @@ export const updateSupportSchema = z.object({
 
 export type CreateRideInput = z.input<typeof createRideSchema>;
 export type CreateRidePayload = z.output<typeof createRideSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type RatingInput = z.infer<typeof ratingSchema>;
 export type SupportRequestInput = z.infer<typeof supportRequestSchema>;
+export type CreatePlaceInput = z.infer<typeof createPlaceSchema>;
+export type PlaceMessageInput = z.infer<typeof placeMessageSchema>;
 export type RegisterProfileInput = z.infer<typeof registerProfileSchema>;
+export type RegisterAccountInput = z.infer<typeof registerAccountSchema>;
+export type OtpRequestInput = z.infer<typeof otpRequestSchema>;
+export type OtpVerifyInput = z.infer<typeof otpVerifySchema>;
 export type AssignDriverInput = z.infer<typeof assignDriverSchema>;
 export type CreateDriverInput = z.infer<typeof createDriverSchema>;

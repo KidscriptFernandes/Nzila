@@ -1,5 +1,8 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
+  customType,
   doublePrecision,
   index,
   jsonb,
@@ -11,6 +14,12 @@ import {
 import { profiles } from "./profiles";
 import { rides } from "./rides";
 import { placeCategoryEnum, priorityEnum, supportStatusEnum } from "./enums";
+
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType() {
+    return "bytea";
+  },
+});
 
 export const places = pgTable(
   "places",
@@ -24,10 +33,18 @@ export const places = pgTable(
     lng: doublePrecision("lng").notNull(),
     phone: text("phone"),
     googleMapsUrl: text("google_maps_url"),
+    photoMime: text("photo_mime"),
+    photoData: bytea("photo_data"),
     published: boolean("published").notNull().default(false),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("places_cat_idx").on(t.category, t.published)],
+  (t) => [
+    index("places_cat_idx").on(t.category, t.published),
+    check(
+      "places_photo_size_chk",
+      sql`${t.photoData} is null or octet_length(${t.photoData}) <= 2097152`,
+    ),
+  ],
 );
 
 export const supportRequests = pgTable(

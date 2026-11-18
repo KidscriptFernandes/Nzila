@@ -46,6 +46,24 @@ export interface MeResponse {
   driver: DriverProfileDTO | null;
 }
 
+export interface AuthUserDTO {
+  id: string;
+  email: string;
+  role: Role;
+  fullName: string;
+}
+
+export interface AuthSessionDTO {
+  accessToken: string;
+  expiresAt: ISODateString;
+  user: AuthUserDTO;
+}
+
+export interface OtpRequestResponse {
+  sent: boolean;
+  devCode?: string;
+}
+
 export interface ClientProfileDTO {
   nationality: string | null;
   arrivalDate: string | null;
@@ -153,6 +171,19 @@ export interface PlaceDTO {
   phone: string | null;
   googleMapsUrl: string | null;
   published: boolean;
+  photoUrl: string | null;
+}
+
+export interface PlaceMessageDTO {
+  id: string;
+  placeId: string;
+  authorId: string;
+  authorName: string;
+  authorRole: Role;
+  body: string;
+  photoUrl: string | null;
+  photoMime: string | null;
+  createdAt: ISODateString;
 }
 
 export interface SupportRequestDTO {

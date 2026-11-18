@@ -8,6 +8,7 @@ import type {
   RideStatus,
 } from "@nzila/shared";
 import { api, buildQuery } from "@/lib/api";
+import { supabaseConfigured } from "@/lib/env";
 import { queryKeys, queryClient as globalClient } from "@/lib/query";
 import { supabase } from "@/lib/supabase";
 
@@ -107,7 +108,7 @@ export function useRateRide(rideId: string) {
 
 export function useRideRealtime(id: string) {
   useEffect(() => {
-    if (!id) return;
+    if (!id || !supabaseConfigured) return;
     const channel = supabase
       .channel(`ride-${id}`)
       .on(

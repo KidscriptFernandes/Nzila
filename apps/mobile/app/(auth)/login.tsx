@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { loginSchema } from "@nzila/shared";
@@ -14,23 +15,30 @@ import { FormInput } from "@/components/ui/FormInput";
 import { Input } from "@/components/ui/Input";
 import { Screen } from "@/components/ui/Screen";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
-import { supabaseConfigured } from "@/lib/env";
+import { ApiError } from "@/lib/api";
 import { queryClient } from "@/lib/query";
-import { supabase } from "@/lib/supabase";
+import { useSession } from "@/store/session";
 
 type LoginValues = z.infer<typeof loginSchema>;
 
-function authErrorMessage(error: { message: string; code?: string }, t: (key: string) => string) {
-  const message = error.message.toLowerCase();
-  if (message.includes("invalid login")) return t("auth.invalidCredentials");
-  if (message.includes("email not confirmed")) return t("auth.emailNotConfirmed");
-  if (message.includes("invalid") && message.includes("token")) return t("auth.otpInvalid");
-  return error.message;
+function authErrorMessage(error: unknown, t: TFunction): string {
+  if (error instanceof ApiError) {
+    if (error.code === "INVALID_CREDENTIALS") return t("auth.invalidCredentials");
+    if (error.code === "OTP_INVALID") return t("auth.otpInvalid");
+    if (error.status === 0) return t("errors.network");
+    if (error.status === 429) return t("errors.rateLimit", { seconds: "60s" });
+    return error.message;
+  }
+  if (error instanceof Error) return error.message;
+  return t("errors.generic");
 }
 
 export default function LoginScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const signIn = useSession((state) => state.signIn);
+  const requestOtp = useSession((state) => state.requestOtp);
+  const verifyOtp = useSession((state) => state.verifyOtp);
   const [showPassword, setShowPassword] = useState(false);
   const [rootError, setRootError] = useState<string | null>(null);
   const [mode, setMode] = useState<"password" | "otp">("password");
@@ -38,6 +46,7 @@ export default function LoginScreen() {
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
+  const [devCode, setDevCode] = useState<string | null>(null);
 
   const {
     control,
@@ -56,19 +65,12 @@ export default function LoginScreen() {
 
   const onSubmit = async (values: LoginValues) => {
     setRootError(null);
-    if (!supabaseConfigured) {
-      setRootError(t("auth.notConfigured"));
-      return;
-    }
-    const { error } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    });
-    if (error) {
+    try {
+      await signIn(values.email, values.password);
+      finish();
+    } catch (error) {
       setRootError(authErrorMessage(error, t));
-      return;
     }
-    finish();
   };
 
   const sendCode = async () => {
@@ -78,38 +80,31 @@ export default function LoginScreen() {
       setRootError(t("auth.email"));
       return;
     }
-    if (!supabaseConfigured) {
-      setRootError(t("auth.notConfigured"));
-      return;
-    }
     setOtpLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: false },
-    });
-    setOtpLoading(false);
-    if (error) {
+    try {
+      const result = await requestOtp(email);
+      setOtpEmail(email);
+      setOtpSent(true);
+      setDevCode(result.devCode ?? null);
+      if (result.devCode) setOtpCode(result.devCode);
+    } catch (error) {
       setRootError(authErrorMessage(error, t));
-      return;
+    } finally {
+      setOtpLoading(false);
     }
-    setOtpEmail(email);
-    setOtpSent(true);
   };
 
   const verifyCode = async () => {
     setRootError(null);
     setOtpLoading(true);
-    const { error } = await supabase.auth.verifyOtp({
-      email: otpEmail,
-      token: otpCode.trim(),
-      type: "email",
-    });
-    setOtpLoading(false);
-    if (error) {
+    try {
+      await verifyOtp(otpEmail, otpCode.trim());
+      finish();
+    } catch (error) {
       setRootError(authErrorMessage(error, t));
-      return;
+    } finally {
+      setOtpLoading(false);
     }
-    finish();
   };
 
   return (
@@ -187,6 +182,11 @@ export default function LoginScreen() {
                   maxLength={6}
                   placeholder="000000"
                 />
+                {devCode ? (
+                  <Text className="font-body text-sm leading-5 text-ink-soft dark:text-night-muted">
+                    {t("auth.devCode", { code: devCode })}
+                  </Text>
+                ) : null}
                 {rootError ? (
                   <Text className="font-body text-sm leading-5 text-nzila-red">{rootError}</Text>
                 ) : null}
@@ -224,6 +224,7 @@ export default function LoginScreen() {
             setRootError(null);
             setOtpSent(false);
             setOtpCode("");
+            setDevCode(null);
             setMode((value) => (value === "password" ? "otp" : "password"));
           }}
           className="items-center py-1"
