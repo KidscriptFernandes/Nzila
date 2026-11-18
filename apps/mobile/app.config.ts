@@ -13,9 +13,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "ao.nzila.concierge",
-    config: {
-      googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY ?? "",
-    },
   },
   android: {
     package: "ao.nzila.concierge",
@@ -25,11 +22,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       foregroundImage: "./assets/images/android-icon-foreground.png",
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
-    },
-    config: {
-      googleMaps: {
-        apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY ?? "",
-      },
     },
   },
   web: {
@@ -76,7 +68,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     apiUrl: process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000",
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ?? "",
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "",
-    googleMapsKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY ?? "",
     whatsappNumber: process.env.EXPO_PUBLIC_WHATSAPP_NUMBER ?? "244923000000",
   },
 });

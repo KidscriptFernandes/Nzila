@@ -1,14 +1,8 @@
-import { useEffect, useRef } from "react";
-import MapView, { Marker } from "react-native-maps";
-import { View } from "react-native";
-import { PLACE_CATEGORY_META, type PlaceDTO } from "@nzila/shared";
-
-const LUANDA = {
-  latitude: -8.839,
-  longitude: 13.289,
-  latitudeDelta: 0.18,
-  longitudeDelta: 0.18,
-};
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { WebView, type WebViewMessageEvent } from "react-native-webview";
+import type { PlaceDTO } from "@nzila/shared";
+import { buildOsmPlacesHtml } from "@/lib/osm-map";
 
 export function PlacesMap({
   places,
@@ -19,56 +13,36 @@ export function PlacesMap({
   selectedId: string | null;
   onSelect: (place: PlaceDTO) => void;
 }) {
-  const mapRef = useRef<MapView>(null);
-  const selected = places.find((place) => place.id === selectedId) ?? null;
-  const focusLat = selected?.lat;
-  const focusLng = selected?.lng;
+  const { t } = useTranslation();
+  const unavailable = t("map.mapUnavailable");
+  const html = useMemo(
+    () => buildOsmPlacesHtml(places, selectedId, unavailable),
+    [places, selectedId, unavailable],
+  );
 
-  useEffect(() => {
-    if (focusLat === undefined || focusLng === undefined) return;
-    mapRef.current?.animateToRegion(
-      {
-        latitude: focusLat,
-        longitude: focusLng,
-        latitudeDelta: 0.045,
-        longitudeDelta: 0.045,
-      },
-      450,
-    );
-  }, [focusLat, focusLng]);
+  const handleMessage = (event: WebViewMessageEvent) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data) as {
+        type?: string;
+        id?: string;
+      };
+      if (data.type !== "select" || !data.id) return;
+      const place = places.find((item) => item.id === data.id);
+      if (place) onSelect(place);
+    } catch {
+      return;
+    }
+  };
 
   return (
-    <MapView
-      ref={mapRef}
-      style={{ flex: 1 }}
-      initialRegion={LUANDA}
-      toolbarEnabled={false}
-      showsCompass={false}
-      showsPointsOfInterests={false}
-    >
-      {places.map((place) => {
-        const meta = PLACE_CATEGORY_META[place.category];
-        const isSelected = place.id === selectedId;
-        return (
-          <Marker
-            key={place.id}
-            coordinate={{ latitude: place.lat, longitude: place.lng }}
-            onPress={() => onSelect(place)}
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
-            <View
-              style={{
-                width: isSelected ? 28 : 18,
-                height: isSelected ? 28 : 18,
-                borderRadius: 999,
-                backgroundColor: meta.color,
-                borderWidth: 3,
-                borderColor: "#FFFFFF",
-              }}
-            />
-          </Marker>
-        );
-      })}
-    </MapView>
+    <WebView
+      originWhitelist={["*"]}
+      source={{ html }}
+      style={{ flex: 1, backgroundColor: "#efe7d8" }}
+      javaScriptEnabled
+      domStorageEnabled
+      setSupportMultipleWindows={false}
+      onMessage={handleMessage}
+    />
   );
 }
