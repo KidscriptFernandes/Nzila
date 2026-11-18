@@ -3,7 +3,8 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Nzila Concierge",
-  slug: "nzila-concierge",
+  slug: "nzila",
+  owner: "filipe_fernandes",
   scheme: "nzila",
   version: "0.1.0",
   orientation: "portrait",
@@ -69,6 +70,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     typedRoutes: false,
   },
   extra: {
+    eas: {
+      projectId: "3ac9a26b-f47e-4e27-b1e1-e748ea6d1b9c",
+    },
     apiUrl: process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000",
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ?? "",
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "",
