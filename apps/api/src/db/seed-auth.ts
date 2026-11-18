@@ -5,7 +5,7 @@ import { closeDb, db } from "./client";
 import { authCredentials, profiles } from "./schema";
 import { hashPassword } from "../lib/password";
 
-const DEMO_PASSWORD = "Nzila!Demo2026";
+const DEMO_PASSWORD = process.env.DEMO_SEED_PASSWORD;
 const DEMO_EMAILS = [
   "admin@nzila.ao",
   "assistente1@nzila.ao",
@@ -90,17 +90,19 @@ async function ensureAdmin(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  for (const email of DEMO_EMAILS) {
-    await setCredential(email, DEMO_PASSWORD);
+  if (DEMO_PASSWORD) {
+    for (const email of DEMO_EMAILS) {
+      await setCredential(email, DEMO_PASSWORD);
+    }
+  } else {
+    console.log("[skip] contas demo: define DEMO_SEED_PASSWORD");
   }
 
   await ensureAdmin();
 
   console.log("");
-  console.log("Credenciais de demonstração (palavra-passe: %s):", DEMO_PASSWORD);
-  console.log("  admin@nzila.ao");
-  console.log("  cliente1@nzila.ao");
-  console.log("  motorista1@nzila.ao");
+  console.log("Contas demo: %s", DEMO_EMAILS.join(", "));
+  console.log("A palavra-passe vem de DEMO_SEED_PASSWORD (não é impressa).");
   console.log("");
   if (ADMIN.email) {
     console.log("Administrador: %s", ADMIN.email);

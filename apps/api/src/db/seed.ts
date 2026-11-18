@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { asc, eq, sql } from "drizzle-orm";
 import type { User } from "@supabase/supabase-js";
 import { db, closeDb } from "./client";
@@ -17,7 +17,7 @@ import {
 import { supabaseAdmin } from "../lib/supabase-admin";
 import { DEFAULT_CANCELLATION_POLICY } from "@nzila/shared";
 
-const DEMO_PASSWORD = "Nzila!Demo2026";
+const DEMO_PASSWORD = process.env.DEMO_SEED_PASSWORD ?? randomUUID();
 const LOCAL_SEED = process.env.SEED_LOCAL === "1";
 const TOMORROW = new Date(Date.now() + 24 * 60 * 60 * 1000);
 const YESTERDAY = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -41,10 +41,7 @@ function localUserId(email: string): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
 }
 
-async function ensureUser(
-  email: string,
-  metadata: Record<string, string>,
-): Promise<string> {
+async function ensureUser(email: string, metadata: Record<string, string>): Promise<string> {
   if (LOCAL_SEED) return localUserId(email);
 
   const existing = await findUserByEmail(email);
@@ -122,7 +119,9 @@ async function seedUser(input: {
   return id;
 }
 
-async function seedDrivers(clientIds: string[]): Promise<{ driverId: string; vehicleId: string }[]> {
+async function seedDrivers(
+  clientIds: string[],
+): Promise<{ driverId: string; vehicleId: string }[]> {
   void clientIds;
   const result: { driverId: string; vehicleId: string }[] = [];
 
@@ -227,18 +226,72 @@ async function seedPlaces(): Promise<void> {
   if (Number(row?.value ?? 0) > 0) return;
 
   const locations = [
-    ["Aeroporto Internacional 4 de Fevereiro", "AEROPORTO", -8.8583, 13.2312, "Aeroporto histórico de Luanda, na zona do Cassequel."],
-    ["Aeroporto Dr. António Agostinho Neto", "AEROPORTO", -9.0456, 13.4932, "Novo aeroporto internacional, em Icolo e Bengo (Bom Jesus)."],
-    ["Epic Sana Luanda Hotel", "HOTEL", -8.8131, 13.2293, "Hotel de referência na Marginal de Luanda."],
-    ["Talatona Convention Hotel", "HOTEL", -8.9147, 13.1847, "Hotel e centro de conferências em Talatona."],
+    [
+      "Aeroporto Internacional 4 de Fevereiro",
+      "AEROPORTO",
+      -8.8583,
+      13.2312,
+      "Aeroporto histórico de Luanda, na zona do Cassequel.",
+    ],
+    [
+      "Aeroporto Dr. António Agostinho Neto",
+      "AEROPORTO",
+      -9.0456,
+      13.4932,
+      "Novo aeroporto internacional, em Icolo e Bengo (Bom Jesus).",
+    ],
+    [
+      "Epic Sana Luanda Hotel",
+      "HOTEL",
+      -8.8131,
+      13.2293,
+      "Hotel de referência na Marginal de Luanda.",
+    ],
+    [
+      "Talatona Convention Hotel",
+      "HOTEL",
+      -8.9147,
+      13.1847,
+      "Hotel e centro de conferências em Talatona.",
+    ],
     ["Hotel Presidente", "HOTEL", -8.8181, 13.2325, "Hotel central na baixa de Luanda."],
     ["Hotel Trópico", "HOTEL", -8.8167, 13.2327, "Hotel clássico perto da Marginal."],
-    ["Clínica Sagrada Esperança", "HOSPITAL", -8.8153, 13.2306, "Clínica privada com urgências e especialidades."],
+    [
+      "Clínica Sagrada Esperança",
+      "HOSPITAL",
+      -8.8153,
+      13.2306,
+      "Clínica privada com urgências e especialidades.",
+    ],
     ["Hospital Girassol", "HOSPITAL", -8.8262, 13.2237, "Hospital privado na zona do Maculusso."],
-    ["Hospital Américo Boavida", "HOSPITAL", -8.8225, 13.24, "Hospital público de referência em Luanda."],
-    ["Hospital Josina Machel", "HOSPITAL", -8.8175, 13.2368, "Hospital público na baixa de Luanda."],
-    ["Farmácia Sagrada Esperança", "FARMACIA", -8.8152, 13.2311, "Farmácia junto à clínica com o mesmo nome."],
-    ["Farmácia Popular de Luanda", "FARMACIA", -8.8201, 13.2338, "Farmácia central com horário alargado."],
+    [
+      "Hospital Américo Boavida",
+      "HOSPITAL",
+      -8.8225,
+      13.24,
+      "Hospital público de referência em Luanda.",
+    ],
+    [
+      "Hospital Josina Machel",
+      "HOSPITAL",
+      -8.8175,
+      13.2368,
+      "Hospital público na baixa de Luanda.",
+    ],
+    [
+      "Farmácia Sagrada Esperança",
+      "FARMACIA",
+      -8.8152,
+      13.2311,
+      "Farmácia junto à clínica com o mesmo nome.",
+    ],
+    [
+      "Farmácia Popular de Luanda",
+      "FARMACIA",
+      -8.8201,
+      13.2338,
+      "Farmácia central com horário alargado.",
+    ],
     ["Farmácia Talatona", "FARMACIA", -8.9135, 13.1862, "Farmácia de bairro em Talatona."],
     ["Banco BAI — Ingombota", "BANCO", -8.8172, 13.2315, "Balcão BAI na baixa de Luanda."],
     ["Banco BFA — Marginal", "BANCO", -8.8143, 13.2322, "Balcão BFA junto à Marginal."],
@@ -248,12 +301,36 @@ async function seedPlaces(): Promise<void> {
     ["ATM BAI — Marginal", "ATM", -8.8146, 13.2329, "Caixa Multicaixa junto à Marginal."],
     ["ATM BFA — Talatona", "ATM", -8.9144, 13.1856, "Caixa Multicaixa em Talatona."],
     ["ATM BIC — Aeroporto", "ATM", -8.8577, 13.2321, "Caixa Multicaixa nas chegadas do aeroporto."],
-    ["Fortaleza de São Miguel", "ATRACAO", -8.8128, 13.2299, "Fortaleza histórica com vista sobre a baía de Luanda."],
+    [
+      "Fortaleza de São Miguel",
+      "ATRACAO",
+      -8.8128,
+      13.2299,
+      "Fortaleza histórica com vista sobre a baía de Luanda.",
+    ],
     ["Miradouro da Lua", "ATRACAO", -9.2333, 13.1167, "Falésias espetaculares a sul de Luanda."],
     ["Ilha de Luanda", "ATRACAO", -8.8, 13.2333, "Restaurantes, praia e passeios na Ilha."],
-    ["Museu Nacional de Antropologia", "ATRACAO", -8.815, 13.23, "Coleções sobre a história e cultura de Angola."],
-    ["Palácio de Ferro", "ATRACAO", -8.814, 13.233, "Edifício histórico atribuído a Gustave Eiffel."],
-    ["Restaurante Fortaleza", "RESTAURANTE", -8.8129, 13.2297, "Cozinha angolana e internacional junto à Fortaleza."],
+    [
+      "Museu Nacional de Antropologia",
+      "ATRACAO",
+      -8.815,
+      13.23,
+      "Coleções sobre a história e cultura de Angola.",
+    ],
+    [
+      "Palácio de Ferro",
+      "ATRACAO",
+      -8.814,
+      13.233,
+      "Edifício histórico atribuído a Gustave Eiffel.",
+    ],
+    [
+      "Restaurante Fortaleza",
+      "RESTAURANTE",
+      -8.8129,
+      13.2297,
+      "Cozinha angolana e internacional junto à Fortaleza.",
+    ],
     ["Lookal Mar", "RESTAURANTE", -8.8015, 13.2358, "Frutos do mar na Ilha de Luanda."],
     ["Cais Quatro", "RESTAURANTE", -8.8158, 13.2345, "Restaurante e bar na Marginal."],
     ["Oon.dah", "RESTAURANTE", -8.8137, 13.2324, "Cozinha contemporânea na baixa de Luanda."],
@@ -439,13 +516,61 @@ async function seedSampleRides(
     const base = new Date(YESTERDAY.getTime() - 3 * 60 * 60 * 1000);
     const step = (minutes: number) => new Date(base.getTime() + minutes * 60_000);
     await db.insert(rideEvents).values([
-      { rideId: ride3.id, toStatus: "NOVO", actorId: primaryClient, actorRole: "client", createdAt: step(0) },
-      { rideId: ride3.id, fromStatus: "NOVO", toStatus: "EM_ANALISE", actorId: assistantId, actorRole: "assistant", createdAt: step(10) },
-      { rideId: ride3.id, fromStatus: "EM_ANALISE", toStatus: "MOTORISTA_PROCURADO", actorId: assistantId, actorRole: "assistant", createdAt: step(20) },
-      { rideId: ride3.id, fromStatus: "MOTORISTA_PROCURADO", toStatus: "MOTORISTA_CONFIRMADO", actorId: secondDriver?.driverId ?? null, actorRole: "driver", createdAt: step(35) },
-      { rideId: ride3.id, fromStatus: "MOTORISTA_CONFIRMADO", toStatus: "CLIENTE_CONFIRMADO", actorId: primaryClient, actorRole: "client", createdAt: step(45) },
-      { rideId: ride3.id, fromStatus: "CLIENTE_CONFIRMADO", toStatus: "EM_VIAGEM", actorId: secondDriver?.driverId ?? null, actorRole: "driver", createdAt: step(120) },
-      { rideId: ride3.id, fromStatus: "EM_VIAGEM", toStatus: "CONCLUIDO", actorId: secondDriver?.driverId ?? null, actorRole: "driver", createdAt: step(165) },
+      {
+        rideId: ride3.id,
+        toStatus: "NOVO",
+        actorId: primaryClient,
+        actorRole: "client",
+        createdAt: step(0),
+      },
+      {
+        rideId: ride3.id,
+        fromStatus: "NOVO",
+        toStatus: "EM_ANALISE",
+        actorId: assistantId,
+        actorRole: "assistant",
+        createdAt: step(10),
+      },
+      {
+        rideId: ride3.id,
+        fromStatus: "EM_ANALISE",
+        toStatus: "MOTORISTA_PROCURADO",
+        actorId: assistantId,
+        actorRole: "assistant",
+        createdAt: step(20),
+      },
+      {
+        rideId: ride3.id,
+        fromStatus: "MOTORISTA_PROCURADO",
+        toStatus: "MOTORISTA_CONFIRMADO",
+        actorId: secondDriver?.driverId ?? null,
+        actorRole: "driver",
+        createdAt: step(35),
+      },
+      {
+        rideId: ride3.id,
+        fromStatus: "MOTORISTA_CONFIRMADO",
+        toStatus: "CLIENTE_CONFIRMADO",
+        actorId: primaryClient,
+        actorRole: "client",
+        createdAt: step(45),
+      },
+      {
+        rideId: ride3.id,
+        fromStatus: "CLIENTE_CONFIRMADO",
+        toStatus: "EM_VIAGEM",
+        actorId: secondDriver?.driverId ?? null,
+        actorRole: "driver",
+        createdAt: step(120),
+      },
+      {
+        rideId: ride3.id,
+        fromStatus: "EM_VIAGEM",
+        toStatus: "CONCLUIDO",
+        actorId: secondDriver?.driverId ?? null,
+        actorRole: "driver",
+        createdAt: step(165),
+      },
     ]);
 
     if (secondDriver) {
@@ -548,7 +673,7 @@ async function main() {
   `);
 
   console.log("");
-  console.log("Dados criados. Contas de demonstração (senha: %s):", DEMO_PASSWORD);
+  console.log("Dados criados. Contas de demonstração (password em DEMO_SEED_PASSWORD):");
   console.log("  admin@nzila.ao        (admin)");
   console.log("  assistente1@nzila.ao  (assistant)");
   console.log("  assistente2@nzila.ao  (assistant)");
