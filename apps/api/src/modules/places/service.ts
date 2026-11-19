@@ -1,10 +1,12 @@
 import type {
   CreatePlaceInput,
+  PlaceCategory,
+  PlaceConversationDTO,
   PlaceDTO,
   PlaceMessageDTO,
   Role,
 } from "@nzila/shared";
-import { and, asc, desc, eq, lt, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, lt, sql, type SQL } from "drizzle-orm";
 import type { DB } from "../../db/client";
 import { auditLogs, placeMessages, places, profiles } from "../../db/schema";
 import { Errors } from "../../lib/errors";
@@ -200,6 +202,115 @@ export async function listPlaceMessages(
     .limit(query.limit);
 
   return rows.reverse().map(toDto);
+}
+
+type ConversationRow = {
+  id: string;
+  name: string;
+  category: PlaceCategory;
+  description: string | null;
+  address: string | null;
+  lat: number;
+  lng: number;
+  phone: string | null;
+  google_maps_url: string | null;
+  published: boolean;
+  photo_mime: string | null;
+  message_id: string;
+  message_place_id: string;
+  author_id: string;
+  body: string;
+  message_photo_mime: string | null;
+  message_created_at: Date;
+  author_name: string;
+  author_role: Role;
+  message_count: number;
+};
+
+export async function listPlaceConversations(
+  db: DB,
+  query: { q?: string; limit: number },
+): Promise<PlaceConversationDTO[]> {
+  const search = query.q
+    ? sql`and (p.name ilike ${`%${query.q}%`} or coalesce(p.address, '') ilike ${`%${query.q}%`})`
+    : sql``;
+
+  const rows = await db.execute<ConversationRow>(sql`
+    select
+      p.id,
+      p.name,
+      p.category,
+      p.description,
+      p.address,
+      p.lat,
+      p.lng,
+      p.phone,
+      p.google_maps_url,
+      p.published,
+      p.photo_mime,
+      latest.id as message_id,
+      latest.place_id as message_place_id,
+      latest.author_id,
+      latest.body,
+      latest.photo_mime as message_photo_mime,
+      latest.created_at as message_created_at,
+      author.full_name as author_name,
+      author.role::text as author_role,
+      stats.message_count
+    from places p
+    join lateral (
+      select pm.*
+      from place_messages pm
+      where pm.place_id = p.id
+      order by pm.created_at desc
+      limit 1
+    ) latest on true
+    inner join profiles author on author.id = latest.author_id
+    cross join lateral (
+      select count(*)::int as message_count
+      from place_messages total
+      where total.place_id = p.id
+    ) stats
+    where p.published = true
+    ${search}
+    order by latest.created_at desc
+    limit ${query.limit}
+  `);
+
+  return rows.map((row) => {
+    const photoUrl = row.photo_mime ? `/v1/places/${row.id}/photo` : null;
+    const messagePhotoUrl = row.message_photo_mime
+      ? `/v1/places/${row.message_place_id}/messages/${row.message_id}/photo`
+      : null;
+
+    return {
+      place: {
+        id: row.id,
+        name: row.name,
+        category: row.category,
+        description: row.description,
+        address: row.address,
+        lat: Number(row.lat),
+        lng: Number(row.lng),
+        phone: row.phone,
+        googleMapsUrl: row.google_maps_url,
+        published: row.published,
+        photoUrl,
+      },
+      lastMessage: {
+        id: row.message_id,
+        placeId: row.message_place_id,
+        authorId: row.author_id,
+        authorName: row.author_name,
+        authorRole: row.author_role,
+        body: row.body,
+        photoUrl: messagePhotoUrl,
+        photoMime: row.message_photo_mime,
+        createdAt: new Date(row.message_created_at).toISOString(),
+      },
+      messageCount: Number(row.message_count),
+    };
+  });
 }
 
 export async function createPlaceMessage(

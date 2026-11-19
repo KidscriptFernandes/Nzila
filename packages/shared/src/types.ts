@@ -186,6 +186,12 @@ export interface PlaceMessageDTO {
   createdAt: ISODateString;
 }
 
+export interface PlaceConversationDTO {
+  place: PlaceDTO;
+  lastMessage: PlaceMessageDTO;
+  messageCount: number;
+}
+
 export interface SupportRequestDTO {
   id: string;
   profileId: string;

@@ -2,6 +2,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { and, asc, eq, gte, ilike, lte, or, type SQL } from "drizzle-orm";
 import {
+  placeConversationsQuerySchema,
   placeMessageSchema,
   placeMessagesQuerySchema,
   placesQuerySchema,
@@ -14,6 +15,7 @@ import {
   fetchPlaceMessagePhoto,
   fetchPlacePhoto,
   fetchPublishedPlace,
+  listPlaceConversations,
   listPlaceMessages,
   toPlaceDto,
 } from "./service";
@@ -70,6 +72,23 @@ export const placesRoutes: FastifyPluginAsyncZod = async (app) => {
 
       return { items: rows.map(toPlaceDto) };
     },
+  );
+
+  app.get(
+    "/conversations",
+    {
+      preHandler: app.authenticate,
+      config: { rateLimit: { max: 60, timeWindow: "1 minute" } },
+      schema: {
+        querystring: placeConversationsQuerySchema,
+        tags: ["places"],
+        summary: "Conversas recentes dos pontos publicados",
+        security: [{ bearer: [] }],
+      },
+    },
+    async (req) => ({
+      items: await listPlaceConversations(app.db, req.query),
+    }),
   );
 
   app.get(

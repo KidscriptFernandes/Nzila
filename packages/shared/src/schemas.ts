@@ -231,6 +231,11 @@ export const placeMessagesQuerySchema = z.object({
   before: z.coerce.date().optional(),
 });
 
+export const placeConversationsQuerySchema = z.object({
+  q: z.string().trim().max(120).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
 export const adminRidesQuerySchema = z.object({
   status: rideStatusSchema.optional(),
   priority: ridePrioritySchema.optional(),

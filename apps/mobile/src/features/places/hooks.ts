@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   CreatePlaceInput,
   PlaceCategory,
+  PlaceConversationDTO,
   PlaceDTO,
   PlaceMessageDTO,
   PlaceMessageInput,
@@ -47,6 +48,18 @@ export function usePlace(id: string) {
     queryFn: () => api<PlaceDTO>(`/v1/places/${id}`),
     enabled: Boolean(id),
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function usePlaceConversations(query?: string) {
+  return useQuery({
+    queryKey: queryKeys.conversations(query),
+    queryFn: () =>
+      api<{ items: PlaceConversationDTO[] }>(
+        `/v1/places/conversations${buildQuery({ q: query || undefined, limit: 60 })}`,
+      ),
+    refetchInterval: 15_000,
+    staleTime: 5_000,
   });
 }
 

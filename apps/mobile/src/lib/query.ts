@@ -36,7 +36,15 @@ export const queryKeys = {
   adminPlaces: ["places", "admin"] as const,
   place: (id: string) => ["place", id] as const,
   placeMessages: (placeId: string) => ["place-messages", placeId] as const,
+  conversations: (query?: string) => ["conversations", query ?? ""] as const,
   support: ["support", "mine"] as const,
   driverMe: ["driver", "me"] as const,
   driverDocuments: ["driver", "documents"] as const,
+  adminMetrics: ["admin", "metrics"] as const,
+  adminRides: (filters?: Record<string, string | undefined>) =>
+    ["admin", "rides", filters ?? {}] as const,
+  adminDrivers: (filters?: Record<string, string | undefined>) =>
+    ["admin", "drivers", filters ?? {}] as const,
+  adminSupport: (filters?: Record<string, string | undefined>) =>
+    ["admin", "support", filters ?? {}] as const,
 };
