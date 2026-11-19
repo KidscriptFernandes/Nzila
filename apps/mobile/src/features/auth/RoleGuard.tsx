@@ -14,7 +14,7 @@ import { useMe } from "./hooks";
 export function roleHome(role: Role): Href {
   if (role === "driver") return "/(driver)/(tabs)";
   if (role === "client") return "/(client)/(tabs)";
-  return "/(admin)/places";
+  return "/(admin)/(tabs)";
 }
 
 export function RoleGuard({

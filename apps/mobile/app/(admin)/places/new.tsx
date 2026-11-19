@@ -102,7 +102,7 @@ export default function NewPlaceScreen() {
     create.mutate(payload, {
       onSuccess: () => {
         notify(t("admin.created"));
-        router.replace("/(admin)/places");
+        router.replace("/(admin)/(tabs)/places");
       },
       onError: (error) => notify(t("admin.createError"), apiErrorMessage(error, t)),
     });
