@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { History, Home, Map, UserRound } from "lucide-react-native";
+import { History, Home, Map, MessageCircle, UserRound } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeColors } from "@/lib/theme";
 
@@ -44,6 +44,15 @@ export default function ClientTabsLayout() {
           title: t("nav.rides"),
           tabBarIcon: ({ color, focused }) => (
             <History size={22} color={color} strokeWidth={focused ? 2.4 : 1.9} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="conversations"
+        options={{
+          title: t("nav.conversations"),
+          tabBarIcon: ({ color, focused }) => (
+            <MessageCircle size={22} color={color} strokeWidth={focused ? 2.4 : 1.9} />
           ),
         }}
       />
