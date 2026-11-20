@@ -8,9 +8,14 @@ export const queryClient = new QueryClient({
     queries: {
       staleTime: 30_000,
       gcTime: 24 * 60 * 60 * 1000,
+      networkMode: "online",
+      refetchOnReconnect: true,
       retry: (failureCount, error) => {
         if (error instanceof ApiError) {
           if ([400, 401, 403, 404, 409, 422, 429].includes(error.status)) return false;
+          if (error.code === "TIMEOUT" || error.code === "NETWORK_ERROR") {
+            return failureCount < 1;
+          }
         }
         return failureCount < 2;
       },
@@ -29,7 +34,8 @@ export const queryPersister = createAsyncStoragePersister({
 
 export const queryKeys = {
   me: ["me"] as const,
-  rides: (filters?: Record<string, string | number | undefined>) => ["rides", filters ?? {}] as const,
+  rides: (filters?: Record<string, string | number | undefined>) =>
+    ["rides", filters ?? {}] as const,
   ride: (id: string) => ["ride", id] as const,
   places: (filters?: Record<string, string | number | undefined>) =>
     ["places", filters ?? {}] as const,

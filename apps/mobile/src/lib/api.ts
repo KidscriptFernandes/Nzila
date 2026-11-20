@@ -8,7 +8,13 @@ export class ApiError extends Error {
   readonly retryAfter?: number;
   readonly issues?: unknown;
 
-  constructor(message: string, status: number, code = "UNKNOWN", retryAfter?: number, issues?: unknown) {
+  constructor(
+    message: string,
+    status: number,
+    code = "UNKNOWN",
+    retryAfter?: number,
+    issues?: unknown,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
@@ -25,9 +31,14 @@ export function retryAfterSeconds(error: unknown): number | undefined {
 export interface ApiRequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
   auth?: boolean;
+  timeoutMs?: number;
 }
 
-export function buildQuery(params?: Record<string, string | number | boolean | undefined | null>): string {
+const DEFAULT_TIMEOUT_MS = 20_000;
+
+export function buildQuery(
+  params?: Record<string, string | number | boolean | undefined | null>,
+): string {
   if (!params) return "";
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -53,7 +64,13 @@ export function mediaUrl(path: string): string {
 }
 
 export async function api<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  const { body, auth = true, ...requestInit } = options;
+  const {
+    body,
+    auth = true,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+    signal: externalSignal,
+    ...requestInit
+  } = options;
   const headers = new Headers(requestInit.headers);
   headers.set("Accept", "application/json");
   if (body !== undefined) headers.set("Content-Type", "application/json");
@@ -62,15 +79,38 @@ export async function api<T>(path: string, options: ApiRequestOptions = {}): Pro
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer =
+    timeoutMs > 0
+      ? setTimeout(() => {
+          timedOut = true;
+          controller.abort();
+        }, timeoutMs)
+      : null;
+  const forwardAbort = () => controller.abort();
+  if (externalSignal) {
+    if (externalSignal.aborted) controller.abort();
+    else externalSignal.addEventListener("abort", forwardAbort, { once: true });
+  }
+
   let response: Response;
   try {
     response = await fetch(`${env.apiUrl}${path}`, {
       ...requestInit,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
     });
-  } catch {
-    throw new ApiError("Sem ligação à API Nzila.", 0, "NETWORK_ERROR");
+  } catch (error) {
+    if (timedOut) {
+      throw new ApiError("O serviço demorou demasiado a responder.", 0, "TIMEOUT");
+    }
+    if (externalSignal?.aborted) throw error;
+    throw new ApiError("Não foi possível contactar o serviço Nzila.", 0, "NETWORK_ERROR");
+  } finally {
+    if (timer) clearTimeout(timer);
+    externalSignal?.removeEventListener("abort", forwardAbort);
   }
 
   if (!response.ok) {

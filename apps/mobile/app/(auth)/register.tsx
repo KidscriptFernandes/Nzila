@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import type { TFunction } from "i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -15,7 +14,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { FormInput } from "@/components/ui/FormInput";
 import { Screen } from "@/components/ui/Screen";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
-import { ApiError } from "@/lib/api";
+import { apiErrorMessage } from "@/lib/errors";
 import { queryClient } from "@/lib/query";
 import { useSession } from "@/store/session";
 import { useSettings } from "@/store/settings";
@@ -38,17 +37,6 @@ const registerFormSchema = z.object({
 });
 
 type RegisterValues = z.infer<typeof registerFormSchema>;
-
-function registerErrorMessage(error: unknown, t: TFunction): string {
-  if (error instanceof ApiError) {
-    if (error.code === "EMAIL_TAKEN") return t("auth.alreadyRegistered");
-    if (error.status === 0) return t("errors.network");
-    if (error.status === 429) return t("errors.rateLimit", { seconds: "60s" });
-    return error.message;
-  }
-  if (error instanceof Error) return error.message;
-  return t("errors.generic");
-}
 
 export default function RegisterScreen() {
   const { t } = useTranslation();
@@ -97,7 +85,7 @@ export default function RegisterScreen() {
       queryClient.clear();
       router.replace("/");
     } catch (error) {
-      setRootError(registerErrorMessage(error, t));
+      setRootError(apiErrorMessage(error, t));
     }
   };
 
@@ -144,7 +132,12 @@ export default function RegisterScreen() {
           secureTextEntry={!showPassword}
           autoCapitalize="none"
           right={
-            <Pressable onPress={() => setShowPassword((value) => !value)} hitSlop={8}>
+            <Pressable
+              onPress={() => setShowPassword((value) => !value)}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
+            >
               {showPassword ? (
                 <EyeOff size={19} color="#4A4A4A" />
               ) : (

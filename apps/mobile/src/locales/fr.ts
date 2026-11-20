@@ -81,6 +81,8 @@ export const fr = {
       fullName: "Nom complet",
       whatsapp: "WhatsApp",
       passwordHint: "Au moins 8 caractères",
+      showPassword: "Afficher le mot de passe",
+      hidePassword: "Masquer le mot de passe",
       nationality: "Nationalité",
       arrivalDate: "Date d'arrivée",
       hotel: "Hôtel ou résidence",
@@ -94,7 +96,8 @@ export const fr = {
       resetSent: "Nous avons envoyé des instructions à votre email.",
       checkEmail: "Compte créé. Confirmez votre email, puis connectez-vous.",
       staffTitle: "Compte opérationnel",
-      staffMessage: "Ce compte est un compte assistant ou administrateur. Utilisez le backoffice Nzila.",
+      staffMessage:
+        "Ce compte est un compte assistant ou administrateur. Utilisez le backoffice Nzila.",
       genericError: "Impossible de terminer. Réessayez.",
       invalidCredentials: "Email ou mot de passe incorrect.",
       emailNotConfirmed: "Confirmez votre email avant de vous connecter.",
@@ -105,7 +108,8 @@ export const fr = {
       passwordResetBack: "Retour à la connexion",
       notConfigured:
         "Supabase n'est pas configuré. Définissez EXPO_PUBLIC_SUPABASE_URL et EXPO_PUBLIC_SUPABASE_ANON_KEY.",
-      alreadyRegistered: "Cet email est déjà enregistré. Connectez-vous ou utilisez un autre email.",
+      alreadyRegistered:
+        "Cet email est déjà enregistré. Connectez-vous ou utilisez un autre email.",
     },
     home: {
       greetingMorning: "Bonjour, {{name}}",
@@ -214,7 +218,8 @@ export const fr = {
       cancelReason: "Motif (facultatif)",
       cancelled: "Trajet annulé.",
       newTitle: "Pas encore confirmé",
-      newBody: "Nous avons reçu la demande. Un assistant va l'examiner et convenir du prix avec vous.",
+      newBody:
+        "Nous avons reçu la demande. Un assistant va l'examiner et convenir du prix avec vous.",
       noDriverTitle: "Recherche d'un chauffeur",
       noDriverBody:
         "L'équipe cherche encore un partenaire vérifié. Vous pouvez parler à un assistant.",
@@ -475,7 +480,8 @@ export const fr = {
     },
     admin: {
       title: "Gestion des lieux",
-      subtitle: "Créez des arrêts, stations-service, distributeurs, pharmacies et autres points utiles.",
+      subtitle:
+        "Créez des arrêts, stations-service, distributeurs, pharmacies et autres points utiles.",
       newPlace: "Nouveau lieu",
       createTitle: "Nouveau lieu",
       createSubtitle: "Marquez le point sur la carte, ajoutez les détails et une photo.",
@@ -507,7 +513,8 @@ export const fr = {
       created: "Lieu créé avec succès.",
       createError: "Impossible de créer le lieu.",
       requiredName: "Indiquez le nom du lieu.",
-      invalidCoordinates: "Marquez le lieu sur la carte avec une latitude et une longitude valides.",
+      invalidCoordinates:
+        "Marquez le lieu sur la carte avec une latitude et une longitude valides.",
       photoTooLarge: "La photo doit faire 2 Mo maximum.",
       photoInvalid: "Format de photo non pris en charge.",
       photoPermission: "Autorisez l'accès aux photos pour joindre une image.",
@@ -558,7 +565,8 @@ export const fr = {
     },
     adminRides: {
       title: "File des trajets",
-      subtitle: "Gérez le cycle opérationnel, attribuez des chauffeurs et contrôlez les tarifs et paiements.",
+      subtitle:
+        "Gérez le cycle opérationnel, attribuez des chauffeurs et contrôlez les tarifs et paiements.",
       todayCount: "{{count}} demandes aujourd'hui",
       emptyTitle: "Aucun trajet dans cette vue",
       emptyBody: "Modifiez le filtre pour voir d'autres statuts ou dates.",
@@ -661,7 +669,8 @@ export const fr = {
       resolvedAt: "Résolue à {{date}}",
       resolved: "Résolue",
       rider: "Client",
-      whatsappMessage: "Bonjour ! L'équipe Nzila vous contacte au sujet de votre demande d'assistance.",
+      whatsappMessage:
+        "Bonjour ! L'équipe Nzila vous contacte au sujet de votre demande d'assistance.",
     },
     conversations: {
       title: "Discussions",
@@ -685,13 +694,37 @@ export const fr = {
     },
     errors: {
       generic: "Une erreur est survenue. Réessayez.",
-      network: "Pas de connexion à l'API. Vérifiez votre serveur et réessayez.",
+      network: "Impossible de joindre le service Nzila. Vérifiez votre connexion et réessayez.",
+      offline: "Pas de connexion Internet. Vérifiez le Wi-Fi ou les données mobiles et réessayez.",
+      offlineTitle: "Pas de connexion Internet",
+      timeout: "Le service a mis trop de temps à répondre. Réessayez.",
+      validation: "Certaines données sont incorrectes. Vérifiez le formulaire et réessayez.",
+      businessRule: "Cette action n'est pas possible dans l'état actuel.",
+      invalidTransition: "Cette action n'est plus disponible à cette étape.",
+      plateInUse: "Un véhicule avec cette plaque existe déjà.",
+      policyLocked: "La politique ne peut plus être modifiée à cette étape.",
+      routeLocked: "L'itinéraire ne peut plus être modifié à cette étape.",
+      alreadyRated: "Cette course a déjà été évaluée.",
+      whatsappUnavailable: "WhatsApp n'est pas configuré dans cet environnement.",
       unauthorized: "Session expirée. Reconnectez-vous.",
       forbidden: "Vous n'avez pas la permission pour cette action.",
       notFound: "Nous n'avons pas trouvé ce contenu.",
       conflict: "Cette action a déjà été effectuée.",
       rateLimit: "Trop de demandes. Réessayez dans {{seconds}}.",
       server: "Le service est indisponible. Réessayez.",
+    },
+    offline: {
+      title: "Pas de connexion Internet",
+      body: "Vous semblez hors ligne. Vérifiez le Wi-Fi ou les données mobiles pour continuer.",
+      tipsTitle: "Que pouvez-vous faire",
+      tip1: "Vérifiez que le Wi-Fi ou les données mobiles sont activés.",
+      tip2: "Essayez un autre réseau ou activez puis désactivez le mode avion.",
+      tip3: "Patientez un instant — l'app se reconnecte automatiquement.",
+      retry: "Vérifier la connexion",
+      checking: "Vérification...",
+      stillOffline: "Toujours hors ligne. Réessayez.",
+      autoReconnect: "Dès que la connexion revient, l'app reprend automatiquement.",
+      restored: "Connexion rétablie.",
     },
   },
 } as const;

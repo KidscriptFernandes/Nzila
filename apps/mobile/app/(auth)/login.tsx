@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import type { TFunction } from "i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { loginSchema } from "@nzila/shared";
@@ -15,23 +14,11 @@ import { FormInput } from "@/components/ui/FormInput";
 import { Input } from "@/components/ui/Input";
 import { Screen } from "@/components/ui/Screen";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
-import { ApiError } from "@/lib/api";
+import { apiErrorMessage } from "@/lib/errors";
 import { queryClient } from "@/lib/query";
 import { useSession } from "@/store/session";
 
 type LoginValues = z.infer<typeof loginSchema>;
-
-function authErrorMessage(error: unknown, t: TFunction): string {
-  if (error instanceof ApiError) {
-    if (error.code === "INVALID_CREDENTIALS") return t("auth.invalidCredentials");
-    if (error.code === "OTP_INVALID") return t("auth.otpInvalid");
-    if (error.status === 0) return t("errors.network");
-    if (error.status === 429) return t("errors.rateLimit", { seconds: "60s" });
-    return error.message;
-  }
-  if (error instanceof Error) return error.message;
-  return t("errors.generic");
-}
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -69,7 +56,7 @@ export default function LoginScreen() {
       await signIn(values.email, values.password);
       finish();
     } catch (error) {
-      setRootError(authErrorMessage(error, t));
+      setRootError(apiErrorMessage(error, t));
     }
   };
 
@@ -88,7 +75,7 @@ export default function LoginScreen() {
       setDevCode(result.devCode ?? null);
       if (result.devCode) setOtpCode(result.devCode);
     } catch (error) {
-      setRootError(authErrorMessage(error, t));
+      setRootError(apiErrorMessage(error, t));
     } finally {
       setOtpLoading(false);
     }
@@ -101,7 +88,7 @@ export default function LoginScreen() {
       await verifyOtp(otpEmail, otpCode.trim());
       finish();
     } catch (error) {
-      setRootError(authErrorMessage(error, t));
+      setRootError(apiErrorMessage(error, t));
     } finally {
       setOtpLoading(false);
     }
@@ -147,7 +134,14 @@ export default function LoginScreen() {
               autoComplete="password"
               error={errors.password?.message}
               right={
-                <Pressable onPress={() => setShowPassword((value) => !value)} hitSlop={8}>
+                <Pressable
+                  onPress={() => setShowPassword((value) => !value)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    showPassword ? t("auth.hidePassword") : t("auth.showPassword")
+                  }
+                >
                   {showPassword ? (
                     <EyeOff size={19} color="#4A4A4A" />
                   ) : (

@@ -13,6 +13,8 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NotificationObserver } from "@/features/auth/NotificationObserver";
 import { ThemeSync } from "@/components/ThemeSync";
+import { ConnectionOverlay } from "@/components/connectivity/ConnectionOverlay";
+import { startConnectivityWatcher } from "@/lib/connectivity";
 import i18n from "@/lib/i18n";
 import { queryClient, queryPersister } from "@/lib/query";
 import { useThemeColors } from "@/lib/theme";
@@ -37,6 +39,8 @@ export default function RootLayout() {
   useEffect(() => {
     void initialize();
   }, [initialize]);
+
+  useEffect(() => startConnectivityWatcher(), []);
 
   useEffect(() => {
     void i18n.changeLanguage(language);
@@ -65,6 +69,7 @@ export default function RootLayout() {
         <ThemeSync />
         <NotificationObserver />
         <RootNavigator />
+        <ConnectionOverlay />
       </SafeAreaProvider>
     </PersistQueryClientProvider>
   );
