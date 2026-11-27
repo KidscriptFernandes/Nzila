@@ -14,6 +14,7 @@ import { FormInput } from "@/components/ui/FormInput";
 import { Input } from "@/components/ui/Input";
 import { Screen } from "@/components/ui/Screen";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { GoogleAuthButton } from "@/features/auth/GoogleAuthButton";
 import { apiErrorMessage } from "@/lib/errors";
 import { queryClient } from "@/lib/query";
 import { useSession } from "@/store/session";
@@ -227,6 +228,8 @@ export default function LoginScreen() {
             {mode === "password" ? t("auth.useOtp") : t("auth.usePassword")}
           </Text>
         </Pressable>
+
+        <GoogleAuthButton disabled={isSubmitting || otpLoading} onError={setRootError} />
       </Card>
 
       <Pressable onPress={() => router.push("/(auth)/register")} className="mt-6 items-center">

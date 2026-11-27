@@ -1,24 +1,29 @@
 import type { Session } from "@supabase/supabase-js";
 import type {
   AuthSessionDTO,
+  Locale,
   OtpRequestResponse,
   RegisterAccountInput,
 } from "@nzila/shared";
 import { create } from "zustand";
 import { api } from "@/lib/api";
+import { authenticateWithGoogle } from "@/lib/auth-google";
 import {
   clearStoredSession,
   loadStoredSession,
   saveStoredSession,
   sessionFromDto,
 } from "@/lib/auth-session";
+import { supabaseConfigured } from "@/lib/env";
 import { queryClient } from "@/lib/query";
+import { supabase } from "@/lib/supabase";
 
 interface SessionState {
   session: Session | null;
   initialized: boolean;
   initialize: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<Session>;
+  signInWithGoogle: (locale?: Locale) => Promise<Session | null>;
   register: (input: RegisterAccountInput) => Promise<Session>;
   requestOtp: (email: string) => Promise<OtpRequestResponse>;
   verifyOtp: (email: string, code: string) => Promise<Session>;
@@ -42,6 +47,21 @@ export const useSession = create<SessionState>((set) => ({
     const dto = await api<AuthSessionDTO>("/v1/auth/login", {
       method: "POST",
       body: { email, password },
+      auth: false,
+    });
+    const session = await persist(dto);
+    queryClient.clear();
+    set({ session });
+    return session;
+  },
+  signInWithGoogle: async (locale) => {
+    const accessToken = await authenticateWithGoogle();
+    if (!accessToken) return null;
+
+    const dto = await api<AuthSessionDTO>("/v1/auth/google", {
+      method: "POST",
+      body: locale ? { locale } : {},
+      headers: { Authorization: `Bearer ${accessToken}` },
       auth: false,
     });
     const session = await persist(dto);
@@ -82,6 +102,9 @@ export const useSession = create<SessionState>((set) => ({
       await api("/v1/auth/logout", { method: "POST" });
     } catch {
       void 0;
+    }
+    if (supabaseConfigured) {
+      await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
     }
     await clearStoredSession();
     queryClient.clear();

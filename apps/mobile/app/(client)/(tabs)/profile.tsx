@@ -72,7 +72,7 @@ function ProfileContent({ me }: { me: MeResponse }) {
   const setPushEnabled = useSettings((state) => state.setPushEnabled);
 
   const [fullName, setFullName] = useState(me.profile.fullName);
-  const [whatsapp, setWhatsapp] = useState(me.profile.whatsapp);
+  const [whatsapp, setWhatsapp] = useState(me.profile.whatsapp || "+244");
   const [nationality, setNationality] = useState(me.client?.nationality ?? "");
   const [hotel, setHotel] = useState(me.client?.hotel ?? "");
   const [arrivalDate, setArrivalDate] = useState<Date | null>(() =>

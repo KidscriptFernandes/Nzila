@@ -2,6 +2,7 @@ import { createHash, randomInt, randomUUID, timingSafeEqual } from "node:crypto"
 import { eq } from "drizzle-orm";
 import type {
   AuthSessionDTO,
+  GoogleAuthInput,
   LoginInput,
   OtpRequestResponse,
   OtpVerifyInput,
@@ -18,6 +19,7 @@ import { env } from "../../config/env";
 import { AppError, Errors } from "../../lib/errors";
 import { hashPassword, verifyPassword } from "../../lib/password";
 import { ACCESS_TOKEN_TTL_SECONDS, signAccessToken } from "../../lib/sign-token";
+import type { VerifiedToken } from "../../lib/verify-token";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
@@ -213,6 +215,69 @@ export async function verifyOtp(
   await db.delete(authOtpCodes).where(eq(authOtpCodes.email, input.email));
 
   return issueSession(db, credential.profileId, credential.email);
+}
+
+export async function loginWithGoogle(
+  db: DB,
+  token: VerifiedToken,
+  input: GoogleAuthInput,
+): Promise<AuthSessionDTO> {
+  const isGoogle =
+    token.provider === "google" || Boolean(token.providers?.includes("google"));
+  if (!isGoogle) {
+    throw Errors.forbidden("Autenticação Google inválida");
+  }
+
+  const email = token.email?.trim().toLowerCase();
+  if (!email) {
+    throw Errors.unauthorized("Conta Google sem email");
+  }
+
+  if (token.emailVerified === false) {
+    throw Errors.forbidden("Email Google não verificado");
+  }
+
+  const [existingById] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.id, token.id));
+
+  if (existingById) {
+    if (existingById.role === "client") {
+      await db.insert(clients).values({ id: existingById.id }).onConflictDoNothing();
+    }
+    return issueSession(db, existingById.id, email);
+  }
+
+  const credential = await findCredential(db, email);
+  if (credential) {
+    if (token.emailVerified !== true) {
+      throw Errors.conflict("EMAIL_TAKEN", "Este email já está registado");
+    }
+    return issueSession(db, credential.profileId, email);
+  }
+
+  const fallbackName = email.split("@")[0] || "Cliente Nzila";
+  const fullName = (token.fullName?.trim() || fallbackName).slice(0, 120);
+
+  await db.transaction(async (tx) => {
+    await tx
+      .insert(profiles)
+      .values({
+        id: token.id,
+        role: "client",
+        fullName,
+        whatsapp: "",
+        locale: input.locale ?? "pt-AO",
+        active: true,
+        consentAt: new Date(),
+      })
+      .onConflictDoNothing();
+
+    await tx.insert(clients).values({ id: token.id }).onConflictDoNothing();
+  });
+
+  return issueSession(db, token.id, email);
 }
 
 export const AUTH_TOKEN_TTL_SECONDS = ACCESS_TOKEN_TTL_SECONDS;

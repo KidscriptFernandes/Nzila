@@ -34,6 +34,23 @@ describe("API pública", () => {
     expect(response.statusCode).toBe(401);
   });
 
+  it("exige token válido na autenticação Google", async () => {
+    const missing = await app.inject({
+      method: "POST",
+      url: "/v1/auth/google",
+      payload: {},
+    });
+    expect(missing.statusCode).toBe(401);
+
+    const invalid = await app.inject({
+      method: "POST",
+      url: "/v1/auth/google",
+      headers: { authorization: "Bearer not-a-token" },
+      payload: {},
+    });
+    expect(invalid.statusCode).toBe(401);
+  });
+
   it("devolve 404 com código padronizado", async () => {
     const response = await app.inject({ method: "GET", url: "/v1/does-not-exist" });
     expect(response.statusCode).toBe(404);

@@ -1,11 +1,14 @@
 import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import {
+  googleAuthSchema,
   loginSchema,
   otpRequestSchema,
   otpVerifySchema,
   registerAccountSchema,
 } from "@nzila/shared";
+import { verifyAccessToken } from "../../lib/verify-token";
 import {
+  loginWithGoogle,
   loginWithPassword,
   registerAccount,
   requestOtp,
@@ -39,6 +42,34 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const session = await registerAccount(app.db, req.body);
       return reply.code(201).send(session);
+    },
+  );
+
+  app.post(
+    "/google",
+    {
+      config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+      schema: {
+        body: googleAuthSchema,
+        tags: ["auth"],
+        summary: "Entrar ou criar conta com Google",
+        security: [{ bearer: [] }],
+      },
+    },
+    async (req, reply) => {
+      const header = req.headers.authorization;
+      if (!header?.startsWith("Bearer ")) {
+        return reply.unauthorized("Token em falta");
+      }
+
+      let verified;
+      try {
+        verified = await verifyAccessToken(header.slice(7));
+      } catch {
+        return reply.unauthorized("Token inválido ou expirado");
+      }
+
+      return loginWithGoogle(app.db, verified, req.body);
     },
   );
 

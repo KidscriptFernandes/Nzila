@@ -130,6 +130,10 @@ export const otpVerifySchema = z.object({
   code: z.string().trim().regex(/^\d{6}$/, "Código inválido"),
 });
 
+export const googleAuthSchema = z.object({
+  locale: localeSchema.optional(),
+});
+
 export const assignDriverSchema = z.object({
   driverId: uuidSchema,
   vehicleId: uuidSchema,
@@ -285,5 +289,6 @@ export type RegisterProfileInput = z.infer<typeof registerProfileSchema>;
 export type RegisterAccountInput = z.infer<typeof registerAccountSchema>;
 export type OtpRequestInput = z.infer<typeof otpRequestSchema>;
 export type OtpVerifyInput = z.infer<typeof otpVerifySchema>;
+export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;
 export type AssignDriverInput = z.infer<typeof assignDriverSchema>;
 export type CreateDriverInput = z.infer<typeof createDriverSchema>;

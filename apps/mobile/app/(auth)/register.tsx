@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { FormInput } from "@/components/ui/FormInput";
 import { Screen } from "@/components/ui/Screen";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
+import { GoogleAuthButton } from "@/features/auth/GoogleAuthButton";
 import { apiErrorMessage } from "@/lib/errors";
 import { queryClient } from "@/lib/query";
 import { useSession } from "@/store/session";
@@ -193,6 +194,8 @@ export default function RegisterScreen() {
           loading={isSubmitting}
           onPress={handleSubmit(onSubmit)}
         />
+
+        <GoogleAuthButton disabled={isSubmitting} onError={setRootError} />
       </Card>
 
       <Pressable onPress={() => router.replace("/(auth)/login")} className="mt-6 items-center">

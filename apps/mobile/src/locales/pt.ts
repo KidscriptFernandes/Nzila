@@ -108,6 +108,9 @@ export const pt = {
       notConfigured:
         "Supabase não configurado. Define EXPO_PUBLIC_SUPABASE_URL e EXPO_PUBLIC_SUPABASE_ANON_KEY.",
       alreadyRegistered: "Este email já está registado. Entra ou usa outro email.",
+      or: "ou",
+      continueWithGoogle: "Continuar com Google",
+      googleSigningIn: "A ligar ao Google...",
     },
     home: {
       greetingMorning: "Bom dia, {{name}}",

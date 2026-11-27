@@ -49,7 +49,7 @@ export default function NewRideScreen() {
   const clearPins = useRideDraft((state) => state.clearPins);
 
   const [customerName, setCustomerName] = useState(me.data?.profile.fullName ?? "");
-  const [phone, setPhone] = useState(me.data?.profile.whatsapp ?? "+244");
+  const [phone, setPhone] = useState(me.data?.profile.whatsapp || "+244");
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState(asString(params.destination) ?? "");
   const [scheduled, setScheduled] = useState(() => {
