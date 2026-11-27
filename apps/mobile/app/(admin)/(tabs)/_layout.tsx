@@ -23,7 +23,7 @@ export default function AdminTabsLayout() {
           paddingBottom: insets.bottom + 4,
         },
         tabBarLabelStyle: {
-          fontFamily: "Inter_600SemiBold",
+          fontFamily: "Manrope_600SemiBold",
           fontSize: 10,
         },
         sceneStyle: { backgroundColor: colors.background },

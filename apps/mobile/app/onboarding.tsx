@@ -64,17 +64,12 @@ export default function Onboarding() {
             <Pressable
               key={item.value}
               onPress={() => setLanguage(item.value)}
-              className={cn(
-                "rounded-full px-2.5 py-1",
-                language === item.value && "bg-nzila-red",
-              )}
+              className={cn("rounded-full px-2.5 py-1", language === item.value && "bg-nzila-red")}
             >
               <Text
                 className={cn(
                   "font-body-semi text-[11px]",
-                  language === item.value
-                    ? "text-white"
-                    : "text-ink-soft dark:text-night-muted",
+                  language === item.value ? "text-white" : "text-ink-soft dark:text-night-muted",
                 )}
               >
                 {item.label}
@@ -134,7 +129,12 @@ export default function Onboarding() {
           ))}
         </View>
 
-        <Button label={t("onboarding.ctaStart")} size="lg" fullWidth onPress={() => void go("/(auth)/register")} />
+        <Button
+          label={t("onboarding.ctaStart")}
+          size="lg"
+          fullWidth
+          onPress={() => void go("/(auth)/register")}
+        />
         <Button
           label={t("onboarding.ctaLogin")}
           variant="ghost"
@@ -145,7 +145,7 @@ export default function Onboarding() {
         />
 
         <View className="mt-4 flex-row items-center justify-center gap-2">
-          <NzilaMark size={16} color="#B8860B" />
+          <NzilaMark size={16} />
           <Text className="font-body text-[11px] text-ink-soft dark:text-night-muted">
             {t("onboarding.trust")}
           </Text>
@@ -154,4 +154,3 @@ export default function Onboarding() {
     </Screen>
   );
 }
-

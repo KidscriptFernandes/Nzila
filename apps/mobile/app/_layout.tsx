@@ -3,7 +3,11 @@ import "react-native-reanimated";
 import "@/lib/notifications";
 
 import { useEffect } from "react";
-import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from "@expo-google-fonts/inter";
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+} from "@expo-google-fonts/manrope";
 import { Sora_600SemiBold, Sora_700Bold } from "@expo-google-fonts/sora";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { useFonts } from "expo-font";
@@ -29,9 +33,9 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Sora_600SemiBold,
     Sora_700Bold,
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
   });
   const initialize = useSession((state) => state.initialize);
   const language = useSettings((state) => state.language);

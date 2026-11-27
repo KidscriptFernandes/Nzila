@@ -34,9 +34,9 @@ module.exports = {
       fontFamily: {
         heading: ["Sora_700Bold"],
         "heading-semi": ["Sora_600SemiBold"],
-        body: ["Inter_400Regular"],
-        "body-medium": ["Inter_500Medium"],
-        "body-semi": ["Inter_600SemiBold"],
+        body: ["Manrope_400Regular"],
+        "body-medium": ["Manrope_500Medium"],
+        "body-semi": ["Manrope_600SemiBold"],
       },
       borderRadius: {
         xl: "16px",
